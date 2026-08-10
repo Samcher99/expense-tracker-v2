@@ -1,0 +1,19 @@
+# fastapi
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+
+# 表單資料解析（OAuth2PasswordRequestForm 需要）
+python-multipart==0.0.32
+
+# postgresql
+psycopg2-binary==2.9.12
+
+# sqlalchemy
+SQLAlchemy==2.0.51
+
+# 安全性：密碼雜湊 + JWT
+pwdlib[argon2]==0.3.0
+PyJWT==2.13.0
+
+# 環境變數讀取
+pydantic-settings==2.14.2

@@ -1,0 +1,14 @@
+# 環境變數（含密碼、SECRET_KEY）
+.env
+
+# Python 虛擬環境
+venv/
+
+# Python 快取檔案
+__pycache__/
+*.pyc
+
+# IDE 設定
+.vscode/
+
+# 測試/暫存檔案（依你的專案實際情況調整）
