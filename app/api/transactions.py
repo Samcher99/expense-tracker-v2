@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.database.db_users import User
 from app.database.db_conn import get_db
@@ -22,3 +23,10 @@ def create_transaction(transaction: TransactionCreate, db: Session = Depends(get
     db.commit()
     db.refresh(new_transaction)
     return new_transaction
+
+
+@router.get("/transactions", response_model=list[TransactionResponse])
+def read_transaction(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    history_transactions = select(Transactions).where(Transactions.user_id == current_user.id)
+    result = db.execute(history_transactions)
+    return result.scalars().all()
