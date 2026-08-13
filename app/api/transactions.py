@@ -26,10 +26,23 @@ def create_transaction(transaction: TransactionCreate, db: Session = Depends(get
 
 
 @router.get("/transactions", response_model=list[TransactionResponse])
-def read_transaction(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def read_transactions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     history_transactions = select(Transactions).where(Transactions.user_id == current_user.id)
     result = db.execute(history_transactions)
     return result.scalars().all()
+
+@router.get("/transactions/{transaction_id}", response_model=TransactionResponse)
+def read_one_transaction(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    selected_transaction = db.get(Transactions, transaction_id)
+    if not selected_transaction:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="找不到要查詢的資料")
+    if selected_transaction.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="你沒有權限瀏覽這筆交易")
+    return selected_transaction
 
 @router.delete("/transactions/{transaction_id}")
 def delete_transaction(
@@ -69,7 +82,7 @@ def update_transaction(
     if tbu_transaction.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="你沒有權限刪除這筆資料"
+            detail="你沒有權限修改這筆資料"
         )
     transaction_data = transaction.model_dump(exclude_unset=True) 
     for key, value in transaction_data.items():                     
