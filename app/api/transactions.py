@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -30,3 +30,24 @@ def read_transaction(db: Session = Depends(get_db), current_user: User = Depends
     history_transactions = select(Transactions).where(Transactions.user_id == current_user.id)
     result = db.execute(history_transactions)
     return result.scalars().all()
+
+@router.delete("/transactions/{transaction_id}")
+def delete_transaction(
+    transaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tbd_transaction = db.get(Transactions, transaction_id)
+    if not tbd_transaction:
+        raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="找不到要刪除的資料",
+                )
+    if tbd_transaction.user_id != current_user.id:
+        raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="你沒有權限刪除這筆交易",
+                )
+    db.delete(tbd_transaction)
+    db.commit()
+    return {"ok": True}
