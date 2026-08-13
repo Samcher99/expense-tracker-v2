@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
+from datetime import date, datetime
 from app.database.db_users import User
 from app.database.db_conn import get_db
 from app.database.db_transactions import Transactions
@@ -26,9 +26,20 @@ def create_transaction(transaction: TransactionCreate, db: Session = Depends(get
 
 
 @router.get("/transactions", response_model=list[TransactionResponse])
-def read_transactions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    history_transactions = select(Transactions).where(Transactions.user_id == current_user.id)
-    result = db.execute(history_transactions)
+def read_range_transactions(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    range_transactions = select(Transactions).where(Transactions.user_id == current_user.id)
+    if start_date:
+        range_transactions = range_transactions.where(Transactions.created_at >= start_date)
+    if end_date:
+        end_of_day = datetime.combine(end_date, datetime.max.time())
+        range_transactions = range_transactions.where(Transactions.created_at <= end_of_day)
+    
+    result = db.execute(range_transactions)
     return result.scalars().all()
 
 @router.get("/transactions/{transaction_id}", response_model=TransactionResponse)
