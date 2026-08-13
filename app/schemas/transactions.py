@@ -25,3 +25,8 @@ class TransactionResponse(BaseModel):
     type: TransactionType
     need_type: NeedType | None = None
     created_at: datetime
+
+class TransactionUpdate(BaseModel):
+    amount: int | None = Field(default=None, gt=0)
+    type: TransactionType | None = None
+    need_type: NeedType | None = None
