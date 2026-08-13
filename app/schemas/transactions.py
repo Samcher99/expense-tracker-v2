@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator, Field
 from typing_extensions import Self
 from datetime import datetime
 
@@ -21,7 +21,7 @@ class TransactionResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: int
-    amount: int
+    amount: int = Field(gt=0)
     type: TransactionType
     need_type: NeedType | None = None
     created_at: datetime
