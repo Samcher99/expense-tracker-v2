@@ -37,3 +37,38 @@ def test_password_is_hashed(client, db_session):
 
     assert user_in_db.hashed_password != "test123"
     assert user_in_db.hashed_password.startswith("$argon2")
+
+def test_login_success(client):
+    # 先註冊一個使用者
+    client.post(
+        "/users",
+        json={"email": "login_test@example.com", "password": "test123"},
+    )
+
+    # 用剛才註冊的帳密登入
+    response = client.post(
+        "/token",
+        data={"username": "login_test@example.com", "password": "test123"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+def test_login_failed(client):
+    # 先註冊一個使用者
+    client.post(
+        "/users",
+        json={"email": "login_test@example.com", "password": "test123"},
+    )
+
+    # 用剛才註冊的帳密登入
+    response = client.post(
+        "/token",
+        data={"username": "login_test@example.com", "password": "wrongpassward"},
+    )
+
+    assert response.status_code == 401
+    data = response.json()
+    assert data["detail"] == "帳號或密碼錯誤"
