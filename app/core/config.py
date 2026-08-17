@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     postgres_host: str
     postgres_port: int
 
+    test_postgres_db: str
+    test_postgres_port: int
+
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
