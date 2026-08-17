@@ -17,3 +17,9 @@ PyJWT==2.13.0
 
 # 環境變數讀取
 pydantic-settings==2.14.2
+
+# 測試（TestClient 依賴）
+httpx2==<版本號>
+
+#Email格式驗證
+email-validator==2.3.0

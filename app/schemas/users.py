@@ -1,8 +1,8 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import date
 
 class UserCreate(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 class UserResponse(BaseModel):
@@ -12,7 +12,7 @@ class UserResponse(BaseModel):
     created_at: date
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 class Token(BaseModel):
