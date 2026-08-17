@@ -72,3 +72,36 @@ def test_login_failed(client):
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "帳號或密碼錯誤"
+
+def test_read_users_me(client):
+    # 第一步：註冊
+    client.post(
+        "/users",
+        json={"email": "me_test@example.com", "password": "test123"},
+    )
+
+    # 第二步：登入拿 token
+    login_response = client.post(
+        "/token",
+        data={"username": "me_test@example.com", "password": "test123"},
+    )
+    token = login_response.json()["access_token"]
+
+    # 第三步：帶著 token 呼叫 GET /users/me
+    response = client.get(
+        "/users/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["email"] == "me_test@example.com"
+
+def test_read_users_me_invalid_token(client):
+    response = client.get(
+        "/users/me",
+        headers={"Authorization": "Bearer this_is_not_a_valid_token"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Token 無效或已過期"
