@@ -67,3 +67,58 @@ def test_read_transactions_with_date_filter(client, auth_headers, db_session):
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 0
+
+def test_read_one_transaction(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    response = client.get(
+        f"/transactions/{transaction_id}",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == transaction_id
+    assert data["amount"] == 100
+    assert data["type"] == "expense"
+
+def test_read_one_transaction_not_found(client, auth_headers):
+    response = client.get(
+        f"/transactions/99999",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "找不到要查詢的資料"
+
+def test_read_one_transaction_forbidden(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    client.post(
+        "/users",
+        json={"email": "other_user@example.com", "password": "test123"},
+    )
+    login_response = client.post(
+        "/token",
+        data={"username": "other_user@example.com", "password": "test123"},
+    )
+    other_token = login_response.json()["access_token"]
+    other_headers = {"Authorization": f"Bearer {other_token}"}
+
+    response = client.get(
+        f"/transactions/{transaction_id}",
+        headers=other_headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "你沒有權限瀏覽這筆資料"

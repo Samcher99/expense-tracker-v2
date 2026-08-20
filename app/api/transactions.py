@@ -52,7 +52,7 @@ def read_one_transaction(
     if not selected_transaction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="找不到要查詢的資料")
     if selected_transaction.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="你沒有權限瀏覽這筆交易")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="你沒有權限瀏覽這筆資料")
     return selected_transaction
 
 @router.delete("/transactions/{transaction_id}")
@@ -70,7 +70,7 @@ def delete_transaction(
     if tbd_transaction.user_id != current_user.id:
         raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="你沒有權限刪除這筆交易",
+                detail="你沒有權限刪除這筆資料",
         )
     db.delete(tbd_transaction)
     db.commit()
