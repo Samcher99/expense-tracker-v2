@@ -122,3 +122,59 @@ def test_read_one_transaction_forbidden(client, auth_headers):
 
     assert response.status_code == 403
     assert response.json()["detail"] == "你沒有權限瀏覽這筆資料"
+
+def test_delete_transaction(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    delete_response = client.delete(
+        f"/transactions/{transaction_id}",
+        headers=auth_headers,
+    )
+
+    assert delete_response.status_code == 200
+    assert delete_response.json() == {"ok": True}
+
+    # 再查一次，確認真的被刪除了
+    get_response = client.get(
+        f"/transactions/{transaction_id}",
+        headers=auth_headers,
+    )
+    assert get_response.status_code == 404
+
+
+def test_delete_transaction_forbidden(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    client.post(
+        "/users",
+        json={"email": "other_user@example.com", "password": "test123"},
+    )
+    login_response = client.post(
+        "/token",
+        data={"username": "other_user@example.com", "password": "test123"},
+    )
+    other_token = login_response.json()["access_token"]
+    other_headers = {"Authorization": f"Bearer {other_token}"}
+
+    delete_response = client.delete(
+        f"/transactions/{transaction_id}",
+        headers=other_headers,
+    )
+
+    assert delete_response.status_code == 403
+    assert delete_response.json()["detail"] == "你沒有權限刪除這筆資料"
+
+
+
+
+
