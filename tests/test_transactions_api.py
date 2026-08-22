@@ -175,6 +175,74 @@ def test_delete_transaction_forbidden(client, auth_headers):
     assert delete_response.json()["detail"] == "你沒有權限刪除這筆資料"
 
 
+def test_update_transaction(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/transactions/{transaction_id}",
+        json={"amount": 200},
+        headers=auth_headers,
+    )
+
+    assert update_response.status_code == 200
+    data = update_response.json()
+    assert data["amount"] == 200
+    assert data["type"] == "expense"
+    assert data["need_type"] == "need"
+
+def test_update_transaction_failed(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 200, "type": "income"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/transactions/{transaction_id}",
+        json={"type": "expense"},
+        headers=auth_headers,
+    )
+    assert update_response.status_code == 422
+    assert update_response.json()["detail"] == "支出(expense)必須有 need_type"
+
+def test_update_transaction_forbidden(client, auth_headers):
+    create_response = client.post(
+        "/transactions",
+        json={"amount": 100, "type": "expense", "need_type": "need"},
+        headers=auth_headers,
+    )
+    transaction_id = create_response.json()["id"]
+
+    client.post(
+        "/users",
+        json={"email": "other_user@example.com", "password": "test123"},
+    )
+    login_response = client.post(
+        "/token",
+        data={"username": "other_user@example.com", "password": "test123"},
+    )
+    other_token = login_response.json()["access_token"]
+    other_headers = {"Authorization": f"Bearer {other_token}"}
+
+    update_response = client.patch(
+        f"/transactions/{transaction_id}",
+        json={"amount": 600},
+        headers=other_headers,
+    )
+
+    assert update_response.status_code == 403
+    assert update_response.json()["detail"] == "你沒有權限修改這筆資料"
+
+
+        
+
+
 
 
 
